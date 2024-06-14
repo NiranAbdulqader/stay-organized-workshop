@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>ToDos</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <h1>View ToDos</h1>
+    <nav>
+        <ul>
+            <li><a href="index.html">Home</a></li>
+            <li><a href="todo.html">ToDos</a></li>
+            <li><a href="newtodo.html">Create New ToDo</a></li>
+        </ul>
+    </nav>
+    <label for="usersDropdown">Select User:</label>
+    <select id="usersDropdown" onchange="fetchUserToDos()"></select>
+    <div id="todoList"></div>
+    <script>
+        document.addEventListener('DOMContentLoaded', fetchUsers);
+
+        function fetchUsers() {
+            fetch('http://localhost:8083/api/users')
+                .then(response => response.json())
+                .then(users => {
+                    const usersDropdown = document.getElementById('usersDropdown');
+                    users.forEach(user => {
+                        const option = document.createElement('option');
+                        option.value = user.id;
+                        option.textContent = user.name;
+                        usersDropdown.appendChild(option);
+                    });
+                })
+                .catch(error => console.error('Error fetching users:', error));
+        }
+
+        function fetchUserToDos() {
+            const userId = document.getElementById('usersDropdown').value;
+            fetch(`http://localhost:8083/api/todos/byuser/${userId}`)
+                .then(response => response.json())
+                .then(todos => {
+                    const todoList = document.getElementById('todoList');
+                    todoList.innerHTML = '';
+                    if (todos.length === 0) {
+                        todoList.textContent = 'No ToDos for this user.';
+                        return;
+                    }
+                    const ul = document.createElement('ul');
+                    todos.forEach(todo => {
+                        const li = document.createElement('li');
+                        li.innerHTML = `
+                            <strong>${todo.title}</strong> - ${todo.description}
+                            <img src="${todo.completed ? 'check.png' : 'x.png'}" alt="${todo.completed ? 'Completed' : 'Not completed'}" width="20">
+                        `;
+                        ul.appendChild(li);
+                    });
+                    todoList.appendChild(ul);
+                })
+                .catch(error => console.error('Error fetching user todos:', error));
+        }
+    </script>
+</body>
+</html>
